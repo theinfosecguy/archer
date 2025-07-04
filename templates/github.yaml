@@ -1,0 +1,29 @@
+name: github
+description: "Validates GitHub personal access tokens and fine-grained tokens"
+
+api_url: "https://api.github.com/user"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    Accept: "application/vnd.github+json"
+    X-GitHub-Api-Version: "2022-11-28"
+    User-Agent: "secret-validator/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200, 201]
+  required_fields:
+    - "login"
+    - "id"
+    - "node_id"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired GitHub token"
+    403: "Token lacks required permissions or rate limit exceeded"
+    404: "Token valid but user endpoint not accessible"
+    422: "Token format is invalid"
