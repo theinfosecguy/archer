@@ -16,7 +16,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 
 [project.scripts]
-archer = "archer.main:validate_secret"
+archer = "archer.cli:cli"
 
 [build-system]
 requires = ["hatchling"]
