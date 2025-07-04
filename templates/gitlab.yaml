@@ -1,0 +1,26 @@
+name: gitlab
+description: "Validates GitLab personal access tokens"
+
+api_url: "https://gitlab.com/api/v4/user"
+method: GET
+
+request:
+  headers:
+    PRIVATE-TOKEN: "${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "id"
+    - "username"
+    - "name"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired GitLab token"
+    403: "Token lacks required scopes"
+    404: "Token valid but user endpoint not accessible"
