@@ -1,0 +1,25 @@
+name: openai
+description: "Validates OpenAI API keys"
+
+api_url: "https://api.openai.com/v1/models"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "data"
+    - "object"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid OpenAI API key"
+    429: "Rate limit exceeded"
+    403: "API key lacks required permissions"
