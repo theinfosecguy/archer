@@ -1,0 +1,27 @@
+name: slack
+description: "Validates Slack bot and user tokens"
+
+api_url: "https://slack.com/api/auth.test"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    Content-Type: "application/x-www-form-urlencoded"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "ok"
+    - "user_id"
+    - "team_id"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid Slack token"
+    403: "Token lacks required permissions"
+    429: "Rate limit exceeded"
