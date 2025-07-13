@@ -1,0 +1,27 @@
+name: digitalocean
+description: "Template for validating DigitalOcean personal access token"
+
+api_url: "https://api.digitalocean.com/v2/account"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "account"
+    - "account.uuid"
+    - "account.email"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired DigitalOcean token"
+    403: "Token lacks required permissions"
+    404: "DigitalOcean API endpoint not accessible"
+    429: "Rate limit exceeded"
