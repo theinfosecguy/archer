@@ -1,0 +1,27 @@
+name: clickup
+description: "Template for validating ClickUp API token"
+
+api_url: "https://api.clickup.com/api/v2/user"
+method: GET
+
+request:
+  headers:
+    Authorization: "${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "user"
+    - "user.id"
+    - "user.username"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired ClickUp API token"
+    403: "Token lacks required permissions"
+    404: "ClickUp API endpoint not accessible"
+    429: "Rate limit exceeded"
