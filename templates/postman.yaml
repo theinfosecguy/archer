@@ -1,0 +1,26 @@
+name: postman
+description: "Template for validating Postman API key"
+
+api_url: "https://api.getpostman.com/me"
+method: GET
+
+request:
+  headers:
+    X-API-Key: "${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "user"
+    - "operations"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired Postman API key"
+    403: "API key lacks required permissions"
+    404: "Postman API endpoint not accessible"
+    429: "Rate limit exceeded"
