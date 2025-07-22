@@ -62,6 +62,15 @@ class SecretValidator:
                 response = await client.request(**request_kwargs)
 
                 logger.info(f"API request completed with status code {response.status_code}")
+
+                # Log response content in debug mode
+                if logger.isEnabledFor(logging.DEBUG):
+                    try:
+                        response_content = response.text
+                        logger.debug(f"Response content: {response_content}")
+                    except Exception as e:
+                        logger.debug(f"Could not read response content: {str(e)}")
+
                 return self._check_response(response, template)
 
             except httpx.TimeoutException:
