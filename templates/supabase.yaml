@@ -1,0 +1,25 @@
+name: supabase
+description: "Template for validating Supabase service role key"
+
+api_url: "https://api.supabase.com/v1/projects"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "[0].id"
+    - "[0].name"
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired Supabase service role key"
+    403: "Token lacks required permissions"
+    404: "Supabase API endpoint not accessible"
+    429: "Rate limit exceeded"
