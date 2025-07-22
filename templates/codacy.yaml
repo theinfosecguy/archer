@@ -1,0 +1,27 @@
+name: codacy
+description: "Template for validating Codacy API token"
+
+api_url: "https://app.codacy.com/api/v3/user"
+method: GET
+
+request:
+  headers:
+    api-token: "${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "data"
+    - "data.id"
+    - "data.name"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired Codacy API token"
+    403: "Token lacks required permissions"
+    404: "Codacy API endpoint not accessible"
+    429: "Rate limit exceeded"
