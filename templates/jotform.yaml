@@ -1,0 +1,27 @@
+name: jotform
+description: "Template for validating JotForm API key"
+
+api_url: "https://api.jotform.com/user"
+method: GET
+
+request:
+  headers:
+    APIKEY: "${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "content"
+    - "content.username"
+    - "content.email"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired JotForm API key"
+    403: "API key lacks required permissions"
+    404: "JotForm API endpoint not accessible"
+    429: "Rate limit exceeded"

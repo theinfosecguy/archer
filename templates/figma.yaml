@@ -1,0 +1,27 @@
+name: figma
+description: "Template for validating Figma personal access token"
+
+api_url: "https://api.figma.com/v1/me"
+method: GET
+
+request:
+  headers:
+    X-Figma-Token: "${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "id"
+    - "handle"
+    - "email"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired Figma personal access token"
+    403: "Token lacks required permissions"
+    404: "Figma API endpoint not accessible"
+    429: "Rate limit exceeded"

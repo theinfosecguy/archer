@@ -1,0 +1,25 @@
+name: Airtable
+description: Template for validating Airtable personal access token.
+
+api_url: "https://api.airtable.com/v0/meta/whoami"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "id"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired Airtable token"
+    403: "Token lacks required permissions"
+    404: "Airtable API endpoint not accessible"
+    422: "Token format is invalid"

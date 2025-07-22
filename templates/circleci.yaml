@@ -1,0 +1,26 @@
+name: circleci
+description: "Template for validating CircleCI personal API token"
+
+api_url: "https://circleci.com/api/v2/me"
+method: GET
+
+request:
+  headers:
+    Circle-Token: "${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "id"
+    - "login"
+    - "name"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired CircleCI token"
+    403: "Token lacks required permissions"
+    404: "CircleCI API endpoint not accessible"

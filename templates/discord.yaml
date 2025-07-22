@@ -1,0 +1,27 @@
+name: discord
+description: "Validates Discord bot tokens"
+
+api_url: "https://discord.com/api/v10/users/@me"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bot ${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "id"
+    - "username"
+    - "bot"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid Discord bot token"
+    403: "Bot token lacks required permissions"
+    404: "Bot endpoint not accessible"
+    429: "Rate limit exceeded"

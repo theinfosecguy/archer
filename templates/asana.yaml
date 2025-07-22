@@ -1,0 +1,28 @@
+name: asana
+description: "Template for validating Asana personal access token"
+
+api_url: "https://app.asana.com/api/1.0/users/me"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "data"
+    - "data.gid"
+    - "data.name"
+    - "data.email"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired Asana personal access token"
+    403: "Token lacks required permissions"
+    404: "Asana API endpoint not accessible"
+    429: "Rate limit exceeded"

@@ -1,0 +1,26 @@
+name: vercel
+description: "Template for validating Vercel authentication token"
+
+api_url: "https://api.vercel.com/v2/user"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "user.id"
+    - "user.email"
+    - "user.username"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired Vercel token"
+    403: "Token lacks required permissions"
+    404: "Vercel API endpoint not accessible"
