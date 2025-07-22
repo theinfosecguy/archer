@@ -1,0 +1,27 @@
+name: newrelic
+description: "Validates New Relic API keys"
+
+api_url: "https://api.newrelic.com/graphql"
+method: POST
+
+request:
+  headers:
+    Api-Key: "${SECRET}"
+    Content-Type: "application/json"
+    User-Agent: "archer/1.0"
+  timeout: 10
+  data: '{"query": "{ actor { user { name } } }"}'
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - data.actor.user.name
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid New Relic API key"
+    403: "API key lacks required permissions"
+    429: "Rate limit exceeded"
+    404: "API endpoint not accessible"
