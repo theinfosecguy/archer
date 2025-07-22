@@ -1,0 +1,28 @@
+name: sentry
+description: "Validates Sentry API tokens"
+
+api_url: "https://sentry.io/api/0/"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    Content-Type: "application/json"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - auth
+    - user.id
+    - user.name
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid Sentry API token"
+    403: "Token lacks required permissions"
+    429: "Rate limit exceeded"
+    404: "No projects accessible or invalid token"
