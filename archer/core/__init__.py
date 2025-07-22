@@ -42,15 +42,24 @@ class SecretValidator:
         for key, value in template.request.headers.items():
             actual_headers[key] = value.replace("${SECRET}", secret)
 
+        # Prepare request kwargs
+        request_kwargs = {
+            "method": template.method,
+            "url": template.api_url,
+            "headers": actual_headers,
+            "timeout": template.request.timeout
+        }
+
+        # Add request body if present
+        if template.request.data:
+            request_kwargs["content"] = template.request.data
+        elif template.request.json_data:
+            request_kwargs["json"] = template.request.json_data
+
         async with httpx.AsyncClient() as client:
             try:
                 logger.debug(f"Sending HTTP request with {template.request.timeout}s timeout")
-                response = await client.request(
-                    method=template.method,
-                    url=template.api_url,
-                    headers=actual_headers,
-                    timeout=template.request.timeout
-                )
+                response = await client.request(**request_kwargs)
 
                 logger.info(f"API request completed with status code {response.status_code}")
                 return self._check_response(response, template)

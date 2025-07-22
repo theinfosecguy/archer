@@ -1,0 +1,29 @@
+name: linear
+description: "Template for validating Linear API key"
+
+api_url: "https://api.linear.app/graphql"
+method: POST
+
+request:
+  headers:
+    Authorization: "${SECRET}"
+    Content-Type: "application/json"
+    User-Agent: "archer/1.0"
+  data: '{"query": "{ viewer { id name email } }"}'
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "data"
+    - "data.viewer"
+    - "data.viewer.id"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired Linear API key"
+    403: "API key lacks required permissions"
+    404: "Linear API endpoint not accessible"
+    429: "Rate limit exceeded"
