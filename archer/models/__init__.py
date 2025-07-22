@@ -1,11 +1,19 @@
-from typing import Dict, List, Optional
-from pydantic import BaseModel
+from typing import Dict, List, Optional, Any
+from pydantic import BaseModel, validator
 
 
 class RequestConfig(BaseModel):
     """Request configuration for API calls."""
     headers: Dict[str, str]
     timeout: int = 10
+    data: Optional[str] = None
+    json_data: Optional[Dict[str, Any]] = None
+    
+    @validator('json_data')
+    def validate_mutual_exclusion(cls, v, values):
+        if v and values.get('data'):
+            raise ValueError("Cannot specify both 'data' and 'json_data'")
+        return v
 
 
 class SuccessCriteria(BaseModel):
