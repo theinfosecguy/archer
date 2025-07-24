@@ -1,5 +1,9 @@
 # Archer
 
+<div align="center">
+  <img width="250" height="250" alt="archer-logo" src="https://github.com/user-attachments/assets/d7b71c8b-eaef-46cf-adfe-a8bb6430b181" />
+</div>
+
 A command-line tool for validating API secrets using YAML templates.
 
 ## Installation
@@ -59,7 +63,6 @@ archer validate openai sk-xxxxxxxxxxxxxxxx
 - **heroku** - Heroku API keys
 - **jotform** - JotForm API keys
 - **linear** - Linear API keys
-- **monday** - Monday.com API tokens
 - **notion** - Notion integration tokens
 - **npm** - npm access tokens
 - **openai** - OpenAI API keys
