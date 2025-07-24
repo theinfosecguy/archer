@@ -8,7 +8,8 @@ class RequestConfig(BaseModel):
     timeout: int = 10
     data: Optional[str] = None
     json_data: Optional[Dict[str, Any]] = None
-    
+    query_params: Optional[Dict[str, str]] = None
+
     @validator('json_data')
     def validate_mutual_exclusion(cls, v, values):
         if v and values.get('data'):
