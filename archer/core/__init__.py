@@ -3,8 +3,17 @@ import logging
 from typing import Dict, Any
 import httpx
 from jsonpath_ng import parse
+
 from archer.models import SecretTemplate
 from archer.templates import TemplateLoader
+from archer.types import (
+    StringDict,
+    OptionalStringDict,
+    ProcessedHeaders,
+    ProcessedParams,
+    ProcessedUrl,
+    ValidationResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +25,46 @@ class SecretValidator:
         self.template_loader = TemplateLoader(templates_dir)
         logger.info(f"SecretValidator initialized with templates directory '{templates_dir}'")
 
-    async def validate_secret(self, template_name: str, secret: str) -> Dict[str, Any]:
+    def _inject_secret_into_string(self, value: str, secret: str) -> str:
+        """Inject secret into a string if it contains the placeholder."""
+        return value.replace("${SECRET}", secret) if "${SECRET}" in value else value
+
+    def _mask_secret_in_string(self, value: str) -> str:
+        """Mask secret in a string if it contains the placeholder."""
+        return value.replace("${SECRET}", "***MASKED***") if "${SECRET}" in value else value
+
+    def _process_headers(self, headers: StringDict, secret: str) -> ProcessedHeaders:
+        """Process headers for both request use and masked logging."""
+        request_headers = {}
+        masked_headers = {}
+
+        for key, value in headers.items():
+            request_headers[key] = self._inject_secret_into_string(value, secret)
+            masked_headers[key] = self._mask_secret_in_string(value)
+
+        return request_headers, masked_headers
+
+    def _process_query_params(self, query_params: OptionalStringDict, secret: str) -> ProcessedParams:
+        """Process query parameters for both request use and masked logging."""
+        if not query_params:
+            return None, None
+
+        request_params = {}
+        masked_params = {}
+
+        for key, value in query_params.items():
+            request_params[key] = self._inject_secret_into_string(value, secret)
+            masked_params[key] = self._mask_secret_in_string(value)
+
+        return request_params, masked_params
+
+    def _process_url(self, url: str, secret: str) -> ProcessedUrl:
+        """Process URL for both request use and masked logging."""
+        request_url = self._inject_secret_into_string(url, secret)
+        masked_url = self._mask_secret_in_string(url)
+        return request_url, masked_url
+
+    async def validate_secret(self, template_name: str, secret: str) -> ValidationResult:
         """Validate a secret using the specified template."""
         logger.info(f"Starting secret validation using template '{template_name}'")
 
@@ -28,27 +76,33 @@ class SecretValidator:
         logger.debug(f"Loaded template '{template.name}': {template.description}")
         return await self._validate_with_template(template, secret)
 
-    async def _validate_with_template(self, template: SecretTemplate, secret: str) -> Dict[str, Any]:
+    async def _validate_with_template(self, template: SecretTemplate, secret: str) -> ValidationResult:
         """Validate secret using the template configuration."""
-        # Replace ${SECRET} placeholder in headers
-        headers = {}
-        for key, value in template.request.headers.items():
-            headers[key] = value.replace("${SECRET}", "***MASKED***" if "${SECRET}" in value else value)
+        # Process URL for secret injection
+        request_url, masked_url = self._process_url(template.api_url, secret)
 
-        logger.debug(f"Preparing {template.method} request to {template.api_url} with masked headers: {headers}")
+        # Process headers for secret injection
+        request_headers, masked_headers = self._process_headers(template.request.headers, secret)
 
-        # Prepare actual headers with secret
-        actual_headers = {}
-        for key, value in template.request.headers.items():
-            actual_headers[key] = value.replace("${SECRET}", secret)
+        # Process query parameters for secret injection  
+        request_query_params, masked_query_params = self._process_query_params(template.request.query_params, secret)
+
+        # Log what we're about to do (with masked values)
+        logger.debug(f"Preparing {template.method} request to {masked_url} with headers: {masked_headers}")
+        if masked_query_params:
+            logger.debug(f"Query parameters (masked): {masked_query_params}")
 
         # Prepare request kwargs
         request_kwargs = {
             "method": template.method,
-            "url": template.api_url,
-            "headers": actual_headers,
+            "url": request_url,
+            "headers": request_headers,
             "timeout": template.request.timeout
         }
+
+        # Add query parameters if present
+        if request_query_params:
+            request_kwargs["params"] = request_query_params
 
         # Add request body if present
         if template.request.data:
@@ -80,7 +134,7 @@ class SecretValidator:
                 logger.error(f"API request failed with exception: {str(e)}")
                 return {"valid": False, "error": f"Request failed: {str(e)}"}
 
-    def _check_response(self, response: httpx.Response, template: SecretTemplate) -> Dict[str, Any]:
+    def _check_response(self, response: httpx.Response, template: SecretTemplate) -> ValidationResult:
         """Check if response meets success criteria."""
         logger.debug(f"Validating response against template success criteria")
 

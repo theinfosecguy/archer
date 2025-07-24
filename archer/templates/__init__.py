@@ -25,20 +25,33 @@ class TemplateLoader:
             return None
 
         try:
-            with open(template_path, 'r') as f:
+            with open(template_path, 'r', encoding='utf-8') as f:
                 data = yaml.safe_load(f)
             logger.debug(f"Successfully parsed YAML from template file '{template_name}.yaml'")
+
+            if not data:
+                logger.error(f"Template file '{template_name}.yaml' is empty or contains no valid YAML")
+                return None
 
             template = SecretTemplate(**data)
             self._templates[template_name] = template
             logger.info(f"Template '{template_name}' loaded successfully: {template.description}")
             return template
 
+        except FileNotFoundError:
+            logger.error(f"Template file not found: '{template_path.absolute()}'")
+            return None
+        except PermissionError:
+            logger.error(f"Permission denied reading template file: '{template_path.absolute()}'")
+            return None
         except yaml.YAMLError as e:
             logger.error(f"YAML parsing failed for template '{template_name}': {str(e)}")
             return None
-        except Exception as e:
+        except ValueError as e:
             logger.error(f"Template validation failed for '{template_name}': {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error loading template '{template_name}': {str(e)}")
             return None
 
     def get_template(self, template_name: str) -> Optional[SecretTemplate]:

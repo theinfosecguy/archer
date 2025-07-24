@@ -1,0 +1,34 @@
+name: miro
+description: "Validates Miro OAuth tokens using query parameter authentication"
+
+api_url: "https://api.miro.com/v1/oauth-token"
+method: GET
+
+request:
+  headers:
+    User-Agent: "archer/1.0"
+    Accept: "application/json"
+  query_params:
+    access_token: "${SECRET}"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "type"
+    - "user.name"
+    - "user.id"
+    - "team.name"
+    - "team.id"
+    - "scopes"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    400: "Invalid Miro access token format"
+    401: "Invalid or expired Miro access token"
+    403: "Miro token lacks required permissions"
+    404: "Miro API endpoint not found"
+    429: "Rate limit exceeded"
+    500: "Miro API server error"
