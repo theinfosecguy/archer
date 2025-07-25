@@ -1,0 +1,26 @@
+name: array-response
+description: "Handling array responses with list validation (Supabase pattern)"
+
+api_url: "https://api.supabase.com/v1/projects"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "[0].id"
+    - "[0].name"
+    - "[0].organization_id"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired service role key"
+    403: "Token lacks required permissions"
+    404: "Projects endpoint not accessible"
