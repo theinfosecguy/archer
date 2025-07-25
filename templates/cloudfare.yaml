@@ -1,0 +1,28 @@
+name: Cloudflare
+description: Template for validating Cloudflare API token.
+
+api_url: "https://api.cloudflare.com/client/v4/user/tokens/verify"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "success"
+    - "result"
+    - "result.id"
+    - "result.status"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    400: "Invalid request format"
+    401: "Invalid or expired Cloudflare API token"
+    403: "Token lacks required permissions"
+    429: "Rate limit exceeded"
