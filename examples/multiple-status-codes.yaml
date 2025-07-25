@@ -1,0 +1,28 @@
+name: multiple-status-codes
+description: "Template accepting multiple success status codes"
+
+api_url: "https://api.github.com/user"
+method: GET
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    Accept: "application/vnd.github+json"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  # Accept both 200 and 201 as success
+  status_code: [200, 201]
+  required_fields:
+    - "login"
+    - "id"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: "Invalid or expired token"
+    403: "Token lacks required permissions"
+    404: "User endpoint not accessible"
+    422: "Invalid token format"
