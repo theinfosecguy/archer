@@ -1,0 +1,37 @@
+name: post-request
+description: "POST request with JSON data using json_data field."
+
+api_url: "https://httpbin.org/post"
+method: POST
+
+request:
+  headers:
+    Authorization: "${SECRET}"
+    User-Agent: "archer/1.0"
+    Content-Type: "application/json"
+  json_data:
+    user_id: 12345
+    name: "John Doe"
+    email: "john.doe@archer.com"
+    preferences:
+      theme: "dark"
+      notifications: true
+    tags: ["developer", "admin"]
+  timeout: 15
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "json"
+    - "json.user_id"
+    - "json.name"
+    - "json.email"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    400: "Bad Request - Invalid JSON data"
+    401: "Unauthorized - Invalid API key"
+    403: "Forbidden - API key lacks required permissions"
+    422: "Unprocessable Entity - Validation errors"
