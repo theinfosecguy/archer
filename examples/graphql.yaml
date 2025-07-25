@@ -1,0 +1,30 @@
+name: graphql
+description: "GraphQL API validation with complex query"
+
+api_url: "https://api.github.com/graphql"
+method: POST
+
+request:
+  headers:
+    Authorization: "Bearer ${SECRET}"
+    Content-Type: "application/json"
+    User-Agent: "archer/1.0"
+  data: '{"query": "{ viewer { login id name organizations(first: 3) { nodes { login } } } }"}'
+  timeout: 15
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - "data"
+    - "data.viewer"
+    - "data.viewer.login"
+    - "data.viewer.organizations"
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    400: "Invalid GraphQL query syntax"
+    401: "Invalid or expired GitHub token"
+    403: "Token lacks required GraphQL scope"
+    502: "GraphQL server error"
