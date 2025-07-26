@@ -1,0 +1,30 @@
+name: Redis_Cloud
+description: Template for validating Redis Cloud API key and secret.
+mode: multipart
+required_variables:
+  - API_KEY
+  - SECRET_KEY
+
+api_url: "https://api.redislabs.com/v1/subscriptions"
+method: GET
+
+request:
+  headers:
+    x-api-key: "${API_KEY}"
+    x-api-secret-key: "${SECRET_KEY}"
+    Accept: "application/json"
+    User-Agent: "archer/1.0"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    400: "Bad request format"
+    401: "Invalid Redis Cloud API credentials"
+    403: "API credentials lack required permissions"
+    404: "Resource not found"
+    429: "Rate limit exceeded"
