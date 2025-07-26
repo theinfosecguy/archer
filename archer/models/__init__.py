@@ -1,5 +1,5 @@
-from typing import Dict, List, Optional, Any
-from pydantic import BaseModel, validator
+from typing import Dict, List, Optional, Any, Literal
+from pydantic import BaseModel, field_validator
 
 
 class RequestConfig(BaseModel):
@@ -10,9 +10,10 @@ class RequestConfig(BaseModel):
     json_data: Optional[Dict[str, Any]] = None
     query_params: Optional[Dict[str, str]] = None
 
-    @validator('json_data')
-    def validate_mutual_exclusion(cls, v, values):
-        if v and values.get('data'):
+    @field_validator('json_data')
+    @classmethod
+    def validate_mutual_exclusion(cls, v, info):
+        if v and info.data.get('data'):
             raise ValueError("Cannot specify both 'data' and 'json_data'")
         return v
 
@@ -34,8 +35,22 @@ class SecretTemplate(BaseModel):
     """Template for secret validation."""
     name: str
     description: str
+    mode: Optional[Literal["single", "multipart"]] = "single"
+    required_variables: Optional[List[str]] = None
     api_url: str
     method: str = "GET"
     request: RequestConfig
     success_criteria: SuccessCriteria
     error_handling: ErrorHandling
+
+    @field_validator('required_variables')
+    @classmethod
+    def validate_required_variables(cls, v, info):
+        mode = info.data.get('mode')
+        if mode == 'multipart':
+            if not v:
+                raise ValueError("required_variables is mandatory when mode is 'multipart'")
+            for var in v:
+                if not var.isupper() or not var.replace('_', '').isalnum():
+                    raise ValueError(f"Variable '{var}' must be uppercase snake_case")
+        return v
