@@ -12,9 +12,17 @@ def cli() -> None:
     Validate secrets against various APIs using configurable templates.
 
     Examples:
+        # Single mode templates
         archer validate github ghp_xxxxxxxxxxxx
+        archer validate openai sk-xxxxxxxxxxxxxxxx
+
+        # Multipart mode templates
+        archer validate ghost --var base-url=https://myblog.com --var api-token=xxxxx
+
+        # Other commands
         archer list
         archer info github
+        archer info ghost
     """
     pass
 
