@@ -22,30 +22,28 @@ uv sync
 
 ## Usage
 
-### With uv (development):
-```bash
-uv run archer validate <template_name> <secret>
-uv run archer list
-uv run archer info <template_name>
-```
-
-### With pip install:
+### Basic usage:
 ```bash
 archer validate <template_name> <secret>
 archer list
 archer info <template_name>
 ```
 
+### Custom templates:
+```bash
+archer validate --template-file ./my-template.yaml <secret>
+archer info --template-file ./my-template.yaml
+```
+
 ### Examples
 ```bash
-# Development (with uv)
-uv run archer validate github ghp_xxxxxxxxxxxxxxx
-uv run archer validate openai sk-xxxxxxxxxxxxxxxx
-uv run archer validate slack xoxb-xxxxxxxxxx
-
-# Production (with pip)
+# Basic usage
 archer validate github ghp_xxxxxxxxxxxxxxx
 archer validate openai sk-xxxxxxxxxxxxxxxx
+
+# Custom template file
+archer validate --template-file ./my-github-template.yaml ghp_xxxxxxxxxxxxxxx
+archer info --template-file ./my-github-template.yaml
 ```
 
 ## Supported Secrets
