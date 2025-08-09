@@ -6,13 +6,38 @@ from jsonpath_ng import parse
 
 from archer.models import SecretTemplate
 from archer.templates import TemplateLoader
+from archer.core.variables import (
+    validate_variables_provided,
+    process_url,
+    process_headers,
+    process_query_params,
+    process_data,
+    process_json_data
+)
 from archer.types import (
-    StringDict,
-    OptionalStringDict,
-    ProcessedHeaders,
-    ProcessedParams,
-    ProcessedUrl,
     ValidationResult,
+)
+from archer.constants import (
+    MODE_SINGLE,
+    MODE_MULTIPART,
+    SECRET_VARIABLE_NAME,
+    DEFAULT_TEMPLATES_DIR,
+    SECRET_VALID,
+    TEMPLATE_NOT_FOUND,
+    REQUEST_TIMEOUT,
+    REQUEST_FAILED,
+    INVALID_JSON_RESPONSE,
+    REQUIRED_FIELD_NOT_FOUND,
+    MISSING_REQUIRED_VARIABLES,
+    VALIDATOR_INITIALIZED,
+    VALIDATION_STARTED,
+    VALIDATION_SUCCESS,
+    VALIDATION_FAILED,
+    REQUEST_PREPARING,
+    REQUEST_SENDING,
+    REQUEST_COMPLETED,
+    REQUEST_TIMEOUT_LOG,
+    REQUEST_FAILED_LOG,
 )
 
 logger = logging.getLogger(__name__)
@@ -21,76 +46,78 @@ logger = logging.getLogger(__name__)
 class SecretValidator:
     """Validates secrets using configured templates."""
 
-    def __init__(self, templates_dir: str = "templates"):
+    def __init__(self, templates_dir: str = DEFAULT_TEMPLATES_DIR):
         self.template_loader = TemplateLoader(templates_dir)
-        logger.info(f"SecretValidator initialized with templates directory '{templates_dir}'")
-
-    def _inject_secret_into_string(self, value: str, secret: str) -> str:
-        """Inject secret into a string if it contains the placeholder."""
-        return value.replace("${SECRET}", secret) if "${SECRET}" in value else value
-
-    def _mask_secret_in_string(self, value: str) -> str:
-        """Mask secret in a string if it contains the placeholder."""
-        return value.replace("${SECRET}", "***MASKED***") if "${SECRET}" in value else value
-
-    def _process_headers(self, headers: StringDict, secret: str) -> ProcessedHeaders:
-        """Process headers for both request use and masked logging."""
-        request_headers = {}
-        masked_headers = {}
-
-        for key, value in headers.items():
-            request_headers[key] = self._inject_secret_into_string(value, secret)
-            masked_headers[key] = self._mask_secret_in_string(value)
-
-        return request_headers, masked_headers
-
-    def _process_query_params(self, query_params: OptionalStringDict, secret: str) -> ProcessedParams:
-        """Process query parameters for both request use and masked logging."""
-        if not query_params:
-            return None, None
-
-        request_params = {}
-        masked_params = {}
-
-        for key, value in query_params.items():
-            request_params[key] = self._inject_secret_into_string(value, secret)
-            masked_params[key] = self._mask_secret_in_string(value)
-
-        return request_params, masked_params
-
-    def _process_url(self, url: str, secret: str) -> ProcessedUrl:
-        """Process URL for both request use and masked logging."""
-        request_url = self._inject_secret_into_string(url, secret)
-        masked_url = self._mask_secret_in_string(url)
-        return request_url, masked_url
+        logger.info(VALIDATOR_INITIALIZED.format(dir=templates_dir))
 
     async def validate_secret(self, template_name: str, secret: str) -> ValidationResult:
-        """Validate a secret using the specified template."""
-        logger.info(f"Starting secret validation using template '{template_name}'")
+        """Validate a secret using the specified template (single mode)."""
+        logger.info(VALIDATION_STARTED.format(template=template_name, mode=MODE_SINGLE))
 
         template = self.template_loader.get_template(template_name)
         if not template:
             logger.error(f"Validation failed: template '{template_name}' not found in templates directory")
-            return {"valid": False, "error": f"Template '{template_name}' not found"}
+            return {"valid": False, "error": TEMPLATE_NOT_FOUND.format(template_name=template_name)}
+
+        if template.mode != MODE_SINGLE:
+            logger.error(f"Template '{template_name}' is not in single mode")
+            return {"valid": False, "error": f"Template '{template_name}' is not a single mode template"}
 
         logger.debug(f"Loaded template '{template.name}': {template.description}")
-        return await self._validate_with_template(template, secret)
 
-    async def _validate_with_template(self, template: SecretTemplate, secret: str) -> ValidationResult:
-        """Validate secret using the template configuration."""
-        # Process URL for secret injection
-        request_url, masked_url = self._process_url(template.api_url, secret)
+        # For single mode, create variables dict with SECRET
+        variables = {SECRET_VARIABLE_NAME: secret}
+        return await self._validate_with_template(template, variables)
 
-        # Process headers for secret injection
-        request_headers, masked_headers = self._process_headers(template.request.headers, secret)
+    async def validate_secret_multipart(self, template_name: str, variables: Dict[str, str]) -> ValidationResult:
+        """Validate secrets using the specified multipart template."""
+        logger.info(VALIDATION_STARTED.format(template=template_name, mode=MODE_MULTIPART))
 
-        # Process query parameters for secret injection  
-        request_query_params, masked_query_params = self._process_query_params(template.request.query_params, secret)
+        template = self.template_loader.get_template(template_name)
+        if not template:
+            logger.error(f"Validation failed: template '{template_name}' not found in templates directory")
+            return {"valid": False, "error": TEMPLATE_NOT_FOUND.format(template_name=template_name)}
+
+        if template.mode != MODE_MULTIPART:
+            logger.error(f"Template '{template_name}' is not in multipart mode")
+            return {"valid": False, "error": f"Template '{template_name}' is not a multipart mode template"}
+
+        logger.debug(f"Loaded template '{template.name}': {template.description}")
+
+        # Validate all required variables are provided
+        missing_vars = validate_variables_provided(template.required_variables, variables)
+        if missing_vars:
+            error_msg = MISSING_REQUIRED_VARIABLES.format(vars=', '.join(missing_vars))
+            logger.error(error_msg)
+            return {"valid": False, "error": error_msg}
+
+        return await self._validate_with_template(template, variables)
+
+    async def _validate_with_template(self, template: SecretTemplate, variables: Dict[str, str]) -> ValidationResult:
+        """Validate using the template configuration with provided variables."""
+        # Process URL for variable injection
+        request_url, masked_url = process_url(template.api_url, variables)
+
+        # Process headers for variable injection
+        request_headers, masked_headers = process_headers(template.request.headers, variables)
+
+        # Process query parameters for variable injection
+        request_query_params, masked_query_params = process_query_params(template.request.query_params, variables)
+
+        # Process data for variable injection
+        request_data, masked_data = process_data(template.request.data, variables)
+
+        # Process JSON data for variable injection
+        request_json_data, masked_json_data = process_json_data(template.request.json_data, variables)
 
         # Log what we're about to do (with masked values)
-        logger.debug(f"Preparing {template.method} request to {masked_url} with headers: {masked_headers}")
+        logger.debug(REQUEST_PREPARING.format(method=template.method, url=masked_url, headers=masked_headers))
         if masked_query_params:
             logger.debug(f"Query parameters (masked): {masked_query_params}")
+        if masked_data:
+            logger.debug(f"Request data (masked): {masked_data}")
+        if masked_json_data:
+            logger.debug(f"Request JSON data (masked): {masked_json_data}")
 
         # Prepare request kwargs
         request_kwargs = {
@@ -105,17 +132,17 @@ class SecretValidator:
             request_kwargs["params"] = request_query_params
 
         # Add request body if present
-        if template.request.data:
-            request_kwargs["content"] = template.request.data
-        elif template.request.json_data:
-            request_kwargs["json"] = template.request.json_data
+        if request_data:
+            request_kwargs["content"] = request_data
+        elif request_json_data:
+            request_kwargs["json"] = request_json_data
 
         async with httpx.AsyncClient() as client:
             try:
-                logger.debug(f"Sending HTTP request with {template.request.timeout}s timeout")
+                logger.debug(REQUEST_SENDING.format(timeout=template.request.timeout))
                 response = await client.request(**request_kwargs)
 
-                logger.info(f"API request completed with status code {response.status_code}")
+                logger.info(REQUEST_COMPLETED.format(status=response.status_code))
 
                 # Log response content in debug mode
                 if logger.isEnabledFor(logging.DEBUG):
@@ -128,11 +155,11 @@ class SecretValidator:
                 return self._check_response(response, template)
 
             except httpx.TimeoutException:
-                logger.error(f"API request timed out after {template.request.timeout} seconds")
-                return {"valid": False, "error": "Request timeout"}
+                logger.error(REQUEST_TIMEOUT_LOG.format(timeout=template.request.timeout))
+                return {"valid": False, "error": REQUEST_TIMEOUT}
             except Exception as e:
-                logger.error(f"API request failed with exception: {str(e)}")
-                return {"valid": False, "error": f"Request failed: {str(e)}"}
+                logger.error(REQUEST_FAILED_LOG.format(error=str(e)))
+                return {"valid": False, "error": REQUEST_FAILED.format(error=str(e))}
 
     def _check_response(self, response: httpx.Response, template: SecretTemplate) -> ValidationResult:
         """Check if response meets success criteria."""
@@ -157,12 +184,12 @@ class SecretValidator:
                     jsonpath_expr = parse(field_path)
                     if not jsonpath_expr.find(response_data):
                         logger.warning(f"Required field validation failed: '{field_path}' not found in response")
-                        return {"valid": False, "error": f"Required field '{field_path}' not found"}
+                        return {"valid": False, "error": REQUIRED_FIELD_NOT_FOUND.format(field_path=field_path)}
                     else:
                         logger.debug(f"Required field validation passed: '{field_path}' found in response")
             except json.JSONDecodeError:
                 logger.error("Response validation failed: API returned invalid JSON")
-                return {"valid": False, "error": "Invalid JSON response"}
+                return {"valid": False, "error": INVALID_JSON_RESPONSE}
 
-        logger.info("Secret validation completed successfully - all criteria met")
-        return {"valid": True, "message": "Secret is valid"}
+        logger.info(VALIDATION_SUCCESS)
+        return {"valid": True, "message": SECRET_VALID}

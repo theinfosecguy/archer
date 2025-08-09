@@ -1,5 +1,6 @@
 import click
 from archer.cli.utils import discover_templates, load_template_safely
+from archer.constants import MODE_SINGLE
 
 
 @click.command()
@@ -17,6 +18,7 @@ def list_templates() -> None:
     for template_name in sorted(templates):
         template = load_template_safely(template_name)
         if template:
-            click.echo(f"  {template.name:<15} - {template.description}")
+            mode_indicator = f"[{template.mode}]" if template.mode else f"[{MODE_SINGLE}]"
+            click.echo(f"  {template.name:<15} {mode_indicator:<12} - {template.description}")
         else:
-            click.echo(f"  {template_name:<15} - [Invalid template]")
+            click.echo(f"  {template_name:<15} {'[invalid]':<12} - [Invalid template]")

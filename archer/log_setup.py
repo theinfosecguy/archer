@@ -1,4 +1,5 @@
 import logging
+from archer.constants import DEFAULT_LOG_FORMAT, TIME_FORMAT
 
 
 def setup_logging(verbose: bool = False, debug: bool = False) -> None:
@@ -12,6 +13,6 @@ def setup_logging(verbose: bool = False, debug: bool = False) -> None:
 
     logging.basicConfig(
         level=level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%H:%M:%S'
+        format=DEFAULT_LOG_FORMAT,
+        datefmt=TIME_FORMAT
     )

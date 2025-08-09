@@ -3,6 +3,7 @@
 from .core import SecretValidator
 from .models import SecretTemplate
 from .templates import TemplateLoader
+from .constants import VERSION
 
-__version__ = "0.1.0"
+__version__ = VERSION
 __all__ = ["SecretValidator", "SecretTemplate", "TemplateLoader"]
