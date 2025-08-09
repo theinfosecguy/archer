@@ -9,6 +9,7 @@ MODE_MULTIPART = "multipart"
 # File system
 DEFAULT_TEMPLATES_DIR = "templates"
 TEMPLATE_FILE_EXTENSION = ".yaml"
+TEMPLATE_FILE_EXTENSIONS = [".yaml", ".yml"]
 
 # Variable handling
 VARIABLE_PATTERN = re.compile(r'\$\{([^}]+)\}')
