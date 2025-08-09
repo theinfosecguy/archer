@@ -2,10 +2,11 @@ import click
 from archer.cli.commands.validate import validate
 from archer.cli.commands.list import list_templates
 from archer.cli.commands.info import info
+from archer.constants import VERSION
 
 
 @click.group()
-@click.version_option(version="0.1.0")
+@click.version_option(version=VERSION)
 def cli() -> None:
     """Archer - Secret validation system using YAML templates.
 

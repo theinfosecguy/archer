@@ -1,12 +1,32 @@
 import re
 from typing import Dict, List, Optional, Any
 from pydantic import BaseModel, field_validator, model_validator
+from archer.constants import (
+    MODE_SINGLE,
+    MODE_MULTIPART,
+    DEFAULT_TIMEOUT,
+    DEFAULT_MAX_RETRIES,
+    DEFAULT_RETRY_DELAY,
+    METHOD_GET,
+    UPPER_SNAKE_CASE_PATTERN,
+    SECRET_VARIABLE_NAME,
+    VARIABLE_PATTERN,
+    MODE_VALIDATION_ERROR,
+    MULTIPART_REQUIRES_VARIABLES,
+    SINGLE_MODE_NO_VARIABLES,
+    MUTUAL_EXCLUSION_ERROR,
+    UPPER_SNAKE_CASE_ERROR,
+    SECRET_NOT_ALLOWED_MULTIPART,
+    INVALID_VARIABLES_SINGLE,
+    UNDEFINED_VARIABLES,
+    UNUSED_REQUIRED_VARIABLES,
+)
 
 
 class RequestConfig(BaseModel):
     """Request configuration for API calls."""
     headers: Dict[str, str]
-    timeout: int = 10
+    timeout: int = DEFAULT_TIMEOUT
     data: Optional[str] = None
     json_data: Optional[Dict[str, Any]] = None
     query_params: Optional[Dict[str, str]] = None
@@ -15,7 +35,7 @@ class RequestConfig(BaseModel):
     @classmethod
     def validate_mutual_exclusion(cls, v, info):
         if v and info.data.get('data'):
-            raise ValueError("Cannot specify both 'data' and 'json_data'")
+            raise ValueError(MUTUAL_EXCLUSION_ERROR)
         return v
 
 
@@ -27,8 +47,8 @@ class SuccessCriteria(BaseModel):
 
 class ErrorHandling(BaseModel):
     """Error handling configuration."""
-    max_retries: int = 2
-    retry_delay: int = 1
+    max_retries: int = DEFAULT_MAX_RETRIES
+    retry_delay: int = DEFAULT_RETRY_DELAY
     error_messages: Dict[int, str] = {}
 
 
@@ -37,8 +57,8 @@ class SecretTemplate(BaseModel):
     name: str
     description: str
     api_url: str
-    method: str = "GET"
-    mode: Optional[str] = "single"
+    method: str = METHOD_GET
+    mode: Optional[str] = MODE_SINGLE
     required_variables: Optional[List[str]] = None
     request: RequestConfig
     success_criteria: SuccessCriteria
@@ -48,8 +68,8 @@ class SecretTemplate(BaseModel):
     @classmethod
     def validate_mode(cls, v):
         """Validate that mode is either 'single' or 'multipart'."""
-        if v not in ['single', 'multipart']:
-            raise ValueError("mode must be either 'single' or 'multipart'")
+        if v not in [MODE_SINGLE, MODE_MULTIPART]:
+            raise ValueError(MODE_VALIDATION_ERROR)
         return v
 
     @field_validator('required_variables')
@@ -58,11 +78,10 @@ class SecretTemplate(BaseModel):
         """Validate that required_variables are in UPPER_SNAKE_CASE format."""
         if v is None:
             return v
-        
-        pattern = re.compile(r'^[A-Z][A-Z0-9_]*$')
+
         for var in v:
-            if not pattern.match(var):
-                raise ValueError(f"Variable '{var}' must be in UPPER_SNAKE_CASE format")
+            if not UPPER_SNAKE_CASE_PATTERN.match(var):
+                raise ValueError(UPPER_SNAKE_CASE_ERROR.format(var=var))
         return v
 
     @model_validator(mode='after')
@@ -70,66 +89,66 @@ class SecretTemplate(BaseModel):
         """Validate multipart mode requirements and variable usage consistency."""
         mode = self.mode
         required_variables = self.required_variables
-        
+
         # If mode is multipart, required_variables is mandatory
-        if mode == 'multipart' and not required_variables:
-            raise ValueError("required_variables is mandatory when mode is 'multipart'")
-        
+        if mode == MODE_MULTIPART and not required_variables:
+            raise ValueError(MULTIPART_REQUIRES_VARIABLES)
+
         # If mode is single, required_variables should not be present
-        if mode == 'single' and required_variables:
-            raise ValueError("required_variables should not be specified when mode is 'single'")
-        
+        if mode == MODE_SINGLE and required_variables:
+            raise ValueError(SINGLE_MODE_NO_VARIABLES)
+
         # Extract all template content for variable validation
         template_content = []
         template_content.append(self.api_url)
-        
+
         # Add headers
         for header_value in self.request.headers.values():
             template_content.append(header_value)
-        
+
         # Add query params
         if self.request.query_params:
             for param_value in self.request.query_params.values():
                 template_content.append(param_value)
-        
+
         # Add data
         if self.request.data:
             template_content.append(self.request.data)
-        
+
         # Add json_data (convert to string representation)
         if self.request.json_data:
             template_content.append(str(self.request.json_data))
-        
+
         # Find all variables used in template
-        variable_pattern = re.compile(r'\$\{([^}]+)\}')
         used_variables = set()
-        
+
         for content in template_content:
-            matches = variable_pattern.findall(content)
+            matches = VARIABLE_PATTERN.findall(content)
             used_variables.update(matches)
-        
+
         # Validate based on mode
-        if mode == 'single':
+        if mode == MODE_SINGLE:
             # Only ${SECRET} should be used
-            if used_variables and used_variables != {'SECRET'}:
-                invalid_vars = used_variables - {'SECRET'}
+            secret_var_set = {SECRET_VARIABLE_NAME}
+            if used_variables and used_variables != secret_var_set:
+                invalid_vars = used_variables - secret_var_set
                 if invalid_vars:
-                    raise ValueError(f"In single mode, only ${{SECRET}} is allowed. Found: {', '.join(invalid_vars)}")
-        
-        elif mode == 'multipart':
+                    raise ValueError(INVALID_VARIABLES_SINGLE.format(vars=', '.join(invalid_vars)))
+
+        elif mode == MODE_MULTIPART:
             # No ${SECRET} should be used
-            if 'SECRET' in used_variables:
-                raise ValueError("${SECRET} is not allowed in multipart mode. Use custom variables instead.")
-            
+            if SECRET_VARIABLE_NAME in used_variables:
+                raise ValueError(SECRET_NOT_ALLOWED_MULTIPART)
+
             # All required_variables must be used
             if required_variables:
                 required_set = set(required_variables)
                 if not used_variables.issubset(required_set):
                     undefined_vars = used_variables - required_set
-                    raise ValueError(f"Template uses undefined variables: {', '.join(undefined_vars)}. Add them to required_variables.")
-                
+                    raise ValueError(UNDEFINED_VARIABLES.format(vars=', '.join(undefined_vars)))
+
                 if not required_set.issubset(used_variables):
                     unused_vars = required_set - used_variables
-                    raise ValueError(f"Required variables not used in template: {', '.join(unused_vars)}")
-        
+                    raise ValueError(UNUSED_REQUIRED_VARIABLES.format(vars=', '.join(unused_vars)))
+
         return self
