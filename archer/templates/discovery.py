@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from typing import List
 
-from archer.constants import DEFAULT_TEMPLATES_DIR, TEMPLATE_FILE_EXTENSION, TEMPLATE_FILE_EXTENSIONS
+from archer.constants import DEFAULT_TEMPLATES_DIR, TEMPLATE_FILE_EXTENSIONS
 from .exceptions import TemplateDirectoryNotFoundError
 from .loader import is_file_path
 
