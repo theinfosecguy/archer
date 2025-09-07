@@ -32,20 +32,32 @@ logger = logging.getLogger(__name__)
 def validate(template_name: str, secret: Optional[str], template_file: Optional[str], var_args: tuple, verbose: bool, debug: bool) -> None:
     """Validate a secret using the specified template.
 
-    For single mode templates:
-        archer validate github <secret>
-
-    For multipart mode templates:
-        archer validate ghost --var base-url=https://myblog.com --var api-token=<token>
-
-    Template loading options:
-        archer validate github <secret>                           # Default templates directory
-        archer validate --template-file ./template.yaml <secret> # Specific template file
+    USAGE PATTERNS:
+    
+    1. Using built-in templates:
+        archer validate <template_name> <secret>
+        archer validate github ghp_xxxxxxxxxxxx
+    
+    2. Using custom template files:
+        archer validate <any_name> --template-file <path> <secret>
+        archer validate custom --template-file ./custom.yaml sk_xxxxxxxxxxxx
+        (Note: <any_name> is ignored when --template-file is used)
+    
+    3. For multipart templates (with variables):
+        archer validate <template_name> --var key=value --var key2=value2
+        archer validate ghost --var base-url=https://myblog.com --var api-token=abc123
     """
     setup_logging(verbose, debug)
     logger.info(f"Starting secret validation process for template '{template_name}'")
 
     async def _validate() -> None:
+        # Validate arguments
+        if not template_file and not template_name:
+            click.echo(f"{FAILURE_INDICATOR} Either template name or --template-file must be provided.")
+            click.echo("Usage: archer validate <template_name> <secret>")
+            click.echo("   or: archer validate --template-file <path> <secret>")
+            raise click.ClickException("Missing template specification")
+
         # Load template to determine mode
         if template_file:
             # Load from specific file
