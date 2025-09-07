@@ -16,12 +16,24 @@ from archer.constants import (
 
 @click.command()
 @click.argument('template_name')
-def info(template_name: str) -> None:
-    """Show detailed information about a template."""
-    template = load_template_safely(template_name)
+@click.option('--template-file', type=click.Path(exists=True, file_okay=True, dir_okay=False), help='Load template from specific file')
+def info(template_name: str, template_file: str) -> None:
+    """Show detailed information about a template.
+
+    Template loading options:
+        archer info github                           # Default templates directory
+        archer info --template-file ./template.yaml # Specific template file (template_name ignored)
+    """
+    if template_file:
+        template = load_template_safely(template_file)
+    else:
+        template = load_template_safely(template_name)
 
     if not template:
-        click.echo(f"{FAILURE_INDICATOR} Template '{template_name}' not found or invalid.")
+        if template_file:
+            click.echo(f"{FAILURE_INDICATOR} Template file '{template_file}' not found or invalid.")
+        else:
+            click.echo(f"{FAILURE_INDICATOR} Template '{template_name}' not found or invalid.")
         raise click.ClickException("Template not found")
 
     click.echo(f"Template: {template.name}")
@@ -34,7 +46,10 @@ def info(template_name: str) -> None:
     # Show usage information based on mode
     if template.mode == MODE_SINGLE:
         click.echo("Usage:")
-        click.echo(f"  archer validate {template_name} <secret>")
+        if template_file:
+            click.echo(f"  archer validate --template-file {template_file} <secret>")
+        else:
+            click.echo(f"  archer validate {template_name} <secret>")
         click.echo()
     elif template.mode == MODE_MULTIPART:
         click.echo("Required Variables:")
@@ -50,7 +65,11 @@ def info(template_name: str) -> None:
             for var in template.required_variables:
                 cli_name = format_var_name_for_cli(var)
                 var_examples.append(f"{OPT_VAR} {cli_name}=<value>")
-        click.echo(f"  archer validate {template_name} {' '.join(var_examples)}")
+
+        if template_file:
+            click.echo(f"  archer validate --template-file {template_file} {' '.join(var_examples)}")
+        else:
+            click.echo(f"  archer validate {template_name} {' '.join(var_examples)}")
         click.echo()
 
     click.echo("Request Headers:")

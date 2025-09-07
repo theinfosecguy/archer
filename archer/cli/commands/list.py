@@ -5,7 +5,7 @@ from archer.constants import MODE_SINGLE
 
 @click.command()
 def list_templates() -> None:
-    """List all available templates."""
+    """List all available templates from the default templates directory."""
     templates = discover_templates()
 
     if not templates:
@@ -17,6 +17,7 @@ def list_templates() -> None:
 
     for template_name in sorted(templates):
         template = load_template_safely(template_name)
+
         if template:
             mode_indicator = f"[{template.mode}]" if template.mode else f"[{MODE_SINGLE}]"
             click.echo(f"  {template.name:<15} {mode_indicator:<12} - {template.description}")
