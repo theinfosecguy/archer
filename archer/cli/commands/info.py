@@ -1,4 +1,5 @@
 import click
+import textwrap
 from archer.cli.utils import load_template_safely
 from archer.core.variables import format_var_name_for_cli
 from archer.constants import (
@@ -16,14 +17,63 @@ from archer.constants import (
 
 @click.command()
 @click.argument('template_name')
-@click.option('--template-file', type=click.Path(exists=True, file_okay=True, dir_okay=False), help='Load template from specific file')
+@click.option('--template-file', type=click.Path(exists=True, file_okay=True, dir_okay=False), help='Load template from specific file instead of built-in')
 def info(template_name: str, template_file: str) -> None:
     """Show detailed information about a template.
 
-    Template loading options:
-        archer info github                           # Default templates directory
-        archer info --template-file ./template.yaml # Specific template file (template_name ignored)
+    Displays comprehensive information about a template's configuration,
+    required variables, API endpoints, and usage examples.
     """
+    
+    help_text = textwrap.dedent("""\
+    \b
+    Arguments:
+      TEMPLATE_NAME  Name of the template to inspect
+
+    \b
+    Options:
+      --template-file FILE  Load template from specific file instead of built-in
+      --help               Show this message and exit
+
+    \b
+    Displayed Information:
+      - Template name and description
+      - Validation mode (single or multipart)
+      - API endpoint and HTTP method
+      - Required variables (for multipart templates)
+      - Usage examples with correct syntax
+      - Request headers and query parameters (with masked values)
+      - Success criteria and error handling configuration
+
+    \b
+    Examples:
+      # Get info for built-in templates
+      archer info github
+      archer info ghost
+      archer info openai
+      
+      # Get info for custom template file
+      archer info --template-file ./custom-api.yaml
+      archer info mytemplate --template-file ./templates/custom.yaml
+      
+      Note: When using --template-file, TEMPLATE_NAME is ignored
+
+    \b
+    Usage Flow:
+      1. Run 'archer list' to see available templates
+      2. Run 'archer info <template>' to understand requirements
+      3. Use the displayed usage example to validate your secret
+      
+      For single mode templates:
+      archer validate <template> <your_secret>
+      
+      For multipart mode templates:
+      archer validate <template> --var key1=value1 --var key2=value2
+
+    The displayed usage examples show the exact command syntax needed
+    for validation, including all required variables in kebab-case format.
+    """)
+
     if template_file:
         template = load_template_safely(template_file)
     else:

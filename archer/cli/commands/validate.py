@@ -1,10 +1,14 @@
+import click
 import asyncio
 import logging
-import click
+import textwrap
+
 from typing import Optional
+
 from archer.core import SecretValidator
 from archer.core.variables import parse_var_args, format_var_name_for_cli
 from archer.log_setup import setup_logging
+
 from archer.templates import TemplateLoader
 from archer.constants import (
     MODE_SINGLE,
@@ -32,21 +36,61 @@ logger = logging.getLogger(__name__)
 def validate(template_name: str, secret: Optional[str], template_file: Optional[str], var_args: tuple, verbose: bool, debug: bool) -> None:
     """Validate a secret using the specified template.
 
-    USAGE PATTERNS:
-    
-    1. Using built-in templates:
-        archer validate <template_name> <secret>
-        archer validate github ghp_xxxxxxxxxxxx
-    
-    2. Using custom template files:
-        archer validate <any_name> --template-file <path> <secret>
-        archer validate custom --template-file ./custom.yaml sk_xxxxxxxxxxxx
-        (Note: <any_name> is ignored when --template-file is used)
-    
-    3. For multipart templates (with variables):
-        archer validate <template_name> --var key=value --var key2=value2
-        archer validate ghost --var base-url=https://myblog.com --var api-token=abc123
+    Validates API secrets against endpoints based on template configuration.
+    Template mode determines the required arguments and usage pattern.
     """
+    
+    help_text = textwrap.dedent("""\
+    \b
+    Arguments:
+      TEMPLATE_NAME  Name of the template to use for validation
+      SECRET         Secret to validate (only for single mode templates)
+
+    \b
+    Options:
+      --template-file FILE      Load template from specific file instead of built-in
+      --var TEXT               Variable in format key=value (for multipart templates only)
+      --verbose, -v            Enable verbose logging
+      --debug, -d              Enable debug logging
+      --help                   Show this message and exit
+
+    \b
+    Usage Examples:
+
+    \b
+    1. SINGLE MODE TEMPLATES:
+       Validate simple API tokens that require only the secret value.
+       
+       archer validate github ghp_xxxxxxxxxxxxxxxxxxxx
+       archer validate openai sk-xxxxxxxxxxxxxxxxxxxxxxxx
+       archer validate npm npm_xxxxxxxxxxxxxxxxxxxxxxxx
+
+    \b
+    2. MULTIPART MODE TEMPLATES:
+       Validate APIs requiring multiple parameters using --var options.
+       
+       archer validate ghost --var base-url=https://myblog.com --var api-token=xxxxx
+       archer validate stripe --var secret-key=sk_test_xxxxx --var publishable-key=pk_test_xxxxx
+       archer validate supabase --var project-url=https://xxx.supabase.co --var anon-key=eyJxxx
+
+    \b
+    3. CUSTOM TEMPLATE FILES:
+       Use your own YAML template files for validation.
+       
+       archer validate myapi --template-file ./custom-api.yaml sk_xxxxxxxxxxxxx
+       archer validate custom --template-file ./multipart.yaml --var token=xxx --var url=https://api.example.com
+
+    \b
+    Variable Format Requirements:
+      For multipart templates, variables must be provided in kebab-case format:
+      
+      ✓ Correct:   --var api-token=xxx --var base-url=https://example.com
+      ✗ Incorrect: --var apiToken=xxx --var base_url=https://example.com
+      
+      Use 'archer info <template>' to see required variables for any template.
+      Use 'archer list' to see which templates are single vs multipart mode.
+    """)
+    
     setup_logging(verbose, debug)
     logger.info(f"Starting secret validation process for template '{template_name}'")
 
