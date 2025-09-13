@@ -9,3 +9,11 @@ wheels/
 # Virtual environments
 .venv
 .env
+.vscode
+.ropeproject
+venv/
+.qoder/
+.mypy_cache/
+.pytest_cache/
+.claude/
+.github/
