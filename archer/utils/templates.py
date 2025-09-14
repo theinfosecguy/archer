@@ -1,3 +1,5 @@
+"""Template-related utilities for Archer."""
+
 from typing import List, Optional
 from archer.models import SecretTemplate
 from archer.templates import TemplateLoader, discover_templates as find_templates
