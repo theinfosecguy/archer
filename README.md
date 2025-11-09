@@ -13,6 +13,21 @@ A command-line tool for validating API secrets using YAML templates.
 pip install archer
 ```
 
+### Using Docker:
+```bash
+# Build the image
+docker build -t archer:latest .
+
+# Run commands
+docker run --rm archer:latest list
+docker run --rm archer:latest info github
+docker run --rm archer:latest validate github ghp_xxxxx
+
+# Use with custom templates
+docker run --rm -v $(pwd)/my-template.yaml:/app/my-template.yaml \
+  archer:latest validate github ghp_xxxxxxxxxxxxxxxxxxxx
+```
+
 ### For development:
 ```bash
 git clone <repository>
