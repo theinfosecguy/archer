@@ -3,7 +3,7 @@ name = "archer"
 version = "0.1.0"
 description = "A system for validating secrets using YAML templates"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"},
+    {name = "Keshav", email = "keshav@theinfosecguy.xyz"},
 ]
 dependencies = [
     "pydantic>=2.0.0",
