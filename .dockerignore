@@ -1,55 +1,32 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
+# Binaries
+archer
+*.exe
+*.dll
 *.so
-.Python
-*.egg-info/
-dist/
-build/
-*.egg
+*.dylib
+*.test
+*.out
 
-# Virtual environments
-venv/
-env/
-ENV/
-.venv
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-
-# IDE
+# Build artifacts
+vendor/
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
-
-# OS
 .DS_Store
-Thumbs.db
 
 # Git
 .git/
 .gitignore
 
-# Docker
-Dockerfile
-.dockerignore
-docker-compose.yml
-
 # Documentation
-docs/
-DOCKER.md
+README.md
+LICENSE
+*.md
+
+# Examples
+examples/
 
 # CI/CD
 .github/
-.gitlab-ci.yml
 
-# Other
-tests/
-.env
-*.log
+# Test files
+*_test.go
