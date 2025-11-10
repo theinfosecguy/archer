@@ -1,0 +1,20 @@
+name: invalid-yaml
+description: This YAML file is intentionally malformed
+api_url: https://api.example.com
+method: GET
+mode: single
+
+request:
+  headers:
+    Authorization: Bearer ${SECRET}
+  timeout: invalid_number_here
+
+success_criteria:
+  status_code: [200
+  required_fields:
+    - field1
+    this is not proper yaml syntax
+
+error_handling
+  max_retries: 2
+  retry_delay: 1
