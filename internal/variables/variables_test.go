@@ -698,14 +698,14 @@ func TestProcessHeaders(t *testing.T) {
 		"X-Custom":      "${CUSTOM_HEADER}",
 	}
 	variables := map[string]string{
-		"SLACK_TOKEN":   "xoxb-1234-5678-abcd",
+		"SLACK_TOKEN":   "test_fake_xoxb_1234_5678_abcd",
 		"CUSTOM_HEADER": "custom-value",
 	}
 
 	requestHeaders, maskedHeaders := ProcessHeaders(headers, variables)
 
-	if requestHeaders["Authorization"] != "Bearer xoxb-1234-5678-abcd" {
-		t.Errorf("Authorization header = %q, want Bearer xoxb-1234-5678-abcd", requestHeaders["Authorization"])
+	if requestHeaders["Authorization"] != "Bearer test_fake_xoxb_1234_5678_abcd" {
+		t.Errorf("Authorization header = %q, want Bearer test_fake_xoxb_1234_5678_abcd", requestHeaders["Authorization"])
 	}
 
 	if maskedHeaders["Authorization"] != "Bearer ***SLACK_TOKEN***" {
