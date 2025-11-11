@@ -1,0 +1,31 @@
+name: ghost
+description: Validates Ghost Admin API token
+api_url: ${BASE_URL}/ghost/api/content/posts/
+method: GET
+mode: multipart
+
+required_variables:
+  - BASE_URL
+  - API_TOKEN
+
+request:
+  headers:
+    User-Agent: archer-test/1.0
+  query_params:
+    key: ${API_TOKEN}
+    limit: "1"
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - posts
+    - meta
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: Invalid or expired Ghost API token
+    403: Token lacks required permissions
+    404: Ghost API endpoint not accessible

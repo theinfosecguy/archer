@@ -1,0 +1,22 @@
+name: multipart-no-vars
+description: Multipart template missing required_variables field
+api_url: ${BASE_URL}/api/validate
+method: POST
+mode: multipart
+
+request:
+  headers:
+    Authorization: Bearer ${API_TOKEN}
+    Content-Type: application/json
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - success
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: Unauthorized

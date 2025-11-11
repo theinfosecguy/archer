@@ -1,0 +1,24 @@
+name: test-single
+description: Test template for single mode validation
+api_url: https://api.example.com/validate
+method: GET
+mode: single
+
+request:
+  headers:
+    Authorization: Bearer ${SECRET}
+    User-Agent: archer-test/1.0
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - valid
+    - user_id
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: Invalid token
+    403: Access denied

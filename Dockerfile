@@ -1,40 +1,51 @@
-# Use Python 3.11 slim image as base
-FROM python:3.11-slim
+# Multi-stage build for minimal final image
+FROM golang:1.25-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates
+
+# Set working directory
+WORKDIR /build
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-w -s" \
+    -o archer \
+    ./cmd/archer
+
+# Final stage - minimal runtime image
+FROM alpine:latest
+
+# Install ca-certificates for HTTPS requests
+RUN apk --no-cache add ca-certificates
+
+# Create non-root user
+RUN addgroup -g 1000 archer && \
+    adduser -D -u 1000 -G archer archer
 
 # Set working directory
 WORKDIR /app
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+# Copy binary from builder
+COPY --from=builder /build/archer /usr/local/bin/archer
 
-# Install system dependencies (if needed)
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+# Copy templates
+COPY --from=builder /build/templates /app/templates
 
-# Copy project files
-COPY pyproject.toml ./
-COPY README.md ./
-COPY archer/ ./archer/
-COPY templates/ ./templates/
-COPY examples/ ./examples/
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -e .
-
-# Create a non-root user to run the application
-RUN useradd -m -u 1000 archer && \
-    chown -R archer:archer /app
-
-# Switch to non-root user
+# Use non-root user
 USER archer
 
-# Set the entrypoint to the archer CLI
+# Set entrypoint
 ENTRYPOINT ["archer"]
 
-# Default command (show help)
+# Default command
 CMD ["--help"]

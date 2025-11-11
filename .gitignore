@@ -1,19 +1,43 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+archer
 
-# Virtual environments
-.venv
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Build directory
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env files
 .env
-.vscode
-.ropeproject
-venv/
-.qoder/
-.mypy_cache/
-.pytest_cache/
-.claude/
-.github/
+.env.local
+
+# Logs
+*.log
+
+# Copilot instructions (personal)
+.github/copilot-instructions.md

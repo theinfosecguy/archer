@@ -4,83 +4,129 @@
   <img width="250" height="250" alt="archer-logo" src="https://github.com/user-attachments/assets/d7b71c8b-eaef-46cf-adfe-a8bb6430b181" />
 </div>
 
-A command-line tool for validating API secrets using YAML templates.
+
+
+A fast, lightweight command-line tool for validating API secrets using YAML templates. Written in Go.
 
 ## Installation
 
-### For end users:
+**Download Binary:**
+
 ```bash
-pip install archer
+# Linux
+curl -L https://github.com/theinfosecguy/archer/releases/latest/download/archer-linux-amd64 -o archer
+chmod +x archer
+sudo mv archer /usr/local/bin/
+
+# macOS (Apple Silicon)
+curl -L https://github.com/theinfosecguy/archer/releases/latest/download/archer-darwin-arm64 -o archer
+chmod +x archer
+sudo mv archer /usr/local/bin/
 ```
 
-### Using Docker:
+**Or build from source:**
+
 ```bash
-# Build the image
-docker build -t archer:latest .
-
-# Run commands
-docker run --rm archer:latest list
-docker run --rm archer:latest info github
-docker run --rm archer:latest validate github ghp_xxxxx
-
-# Use with custom templates
-docker run --rm -v $(pwd)/my-template.yaml:/app/my-template.yaml \
-  archer:latest validate github ghp_xxxxxxxxxxxxxxxxxxxx
-```
-
-### For development:
-```bash
-git clone <repository>
+git clone https://github.com/theinfosecguy/archer.git
 cd archer
-uv sync
+make build
 ```
+
+## Security Warning
+
+**⚠️ Always use environment variables instead of passing secrets as command-line arguments.**
+
+Secrets passed via CLI are exposed in shell history, process lists, and logs.
 
 ## Usage
 
-### Basic usage:
+### Basic Commands
+
 ```bash
-archer validate <template_name> <secret>
+# List all available templates
 archer list
-archer info <template_name>
+
+# Get information about a template
+archer info github
 ```
 
-### Custom templates:
+### Validating Secrets
+
+**Single Mode:**
 ```bash
-archer validate --template-file ./my-template.yaml <secret>
-archer info --template-file ./my-template.yaml
+export ARCHER_SECRET="ghp_xxxxxxxxxxxxxxx"
+archer validate github
 ```
 
-### Examples
+**Multipart Mode:**
 ```bash
-# Basic usage
-archer validate github ghp_xxxxxxxxxxxxxxx
-archer validate openai sk-xxxxxxxxxxxxxxxx
-
-# Custom template file
-archer validate --template-file ./my-github-template.yaml ghp_xxxxxxxxxxxxxxx
-archer info --template-file ./my-github-template.yaml
+export ARCHER_VAR_BASE_URL="https://myblog.com"
+export ARCHER_VAR_API_TOKEN="xxxxx"
+archer validate ghost
 ```
 
-## Supported Secrets
+## Supported Services
 
-- **airtable** - Airtable API keys
-- **asana** - Asana personal access tokens
-- **circleci** - CircleCI API tokens
-- **clickup** - ClickUp API tokens
-- **codacy** - Codacy API tokens
-- **digitalocean** - DigitalOcean API tokens
-- **discord** - Discord bot tokens
-- **figma** - Figma personal access tokens
-- **github** - GitHub personal access tokens
-- **gitlab** - GitLab personal access tokens
-- **heroku** - Heroku API keys
-- **jotform** - JotForm API keys
-- **linear** - Linear API keys
-- **notion** - Notion integration tokens
-- **npm** - npm access tokens
-- **openai** - OpenAI API keys
-- **postman** - Postman API keys
-- **slack** - Slack bot tokens
-- **stripe** - Stripe API keys
-- **supabase** - Supabase API keys
-- **vercel** - Vercel API tokens
+Archer includes built-in templates for 26+ services:
+
+| Service | Template Name | Mode |
+|---------|--------------|------|
+| **Airtable** | `airtable` | single |
+| **Asana** | `asana` | single |
+| **CircleCI** | `circleci` | single |
+| **ClickUp** | `clickup` | single |
+| **Codacy** | `codacy` | single |
+| **Datadog** | `datadog` | single |
+| **DigitalOcean** | `digitalocean` | single |
+| **Discord** | `discord` | single |
+| **Figma** | `figma` | single |
+| **Ghost** | `ghost` | multipart |
+| **GitHub** | `github` | single |
+| **GitLab** | `gitlab` | single |
+| **Heroku** | `heroku` | single |
+| **JotForm** | `jotform` | single |
+| **Linear** | `linear` | single |
+| **Miro** | `miro` | single |
+| **New Relic** | `newrelic` | single |
+| **Notion** | `notion` | single |
+| **npm** | `npm` | single |
+| **OpenAI** | `openai` | single |
+| **Postman** | `postman` | single |
+| **Sentry** | `sentry` | single |
+| **Slack** | `slack` | single |
+| **Stripe** | `stripe` | single |
+| **Supabase** | `supabase` | single |
+| **Vercel** | `vercel` | single |
+
+Run `archer list` to see all available templates.
+
+## Development
+
+```bash
+# Clone and build
+git clone https://github.com/theinfosecguy/archer.git
+cd archer
+make build
+
+# Run tests
+make test
+
+# Build for all platforms
+make release-all
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT License - see LICENSE file for details.
+
+---
+
+**Get started now:**
+
+```bash
+archer list
+```

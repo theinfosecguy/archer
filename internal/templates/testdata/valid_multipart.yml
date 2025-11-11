@@ -1,0 +1,33 @@
+name: test-multipart
+description: Test template for multipart mode validation
+api_url: ${BASE_URL}/api/v1/validate
+method: POST
+mode: multipart
+
+required_variables:
+  - BASE_URL
+  - API_KEY
+  - CLIENT_SECRET
+
+request:
+  headers:
+    X-API-Key: ${API_KEY}
+    Content-Type: application/json
+  json_data:
+    client_secret: ${CLIENT_SECRET}
+    grant_type: client_credentials
+  timeout: 15
+
+success_criteria:
+  status_code: [200, 201]
+  required_fields:
+    - access_token
+    - token_type
+
+error_handling:
+  max_retries: 3
+  retry_delay: 2
+  error_messages:
+    401: Invalid API credentials
+    403: Insufficient permissions
+    429: Rate limit exceeded

@@ -1,0 +1,26 @@
+name: stripe
+description: Validates Stripe API keys
+api_url: https://api.stripe.com/v1/charges
+method: POST
+mode: single
+
+request:
+  headers:
+    Authorization: Bearer ${SECRET}
+    Content-Type: application/x-www-form-urlencoded
+  data: amount=100&currency=usd&source=tok_visa
+  timeout: 10
+
+success_criteria:
+  status_code: [200, 201]
+  required_fields:
+    - id
+    - object
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: Invalid API key provided
+    403: The API key doesn't have permissions to perform the request
+    429: Too many requests hit the API too quickly

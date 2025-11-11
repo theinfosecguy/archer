@@ -1,0 +1,21 @@
+name: invalid-mode
+description: Template with invalid mode value
+api_url: https://api.example.com/validate
+method: GET
+mode: invalid_mode_value
+
+request:
+  headers:
+    Authorization: Bearer ${SECRET}
+  timeout: 10
+
+success_criteria:
+  status_code: [200]
+  required_fields:
+    - valid
+
+error_handling:
+  max_retries: 2
+  retry_delay: 1
+  error_messages:
+    401: Invalid token
