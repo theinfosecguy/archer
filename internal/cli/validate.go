@@ -269,7 +269,10 @@ func handleValidationResult(result *models.ValidationResult, template *models.Se
 	}
 
 	// Always show errors even in json-only mode
-	return fmt.Errorf("%s %s", constants.FailureIndicator, result.Error)
+	// Print error directly instead of returning it to avoid Cobra showing usage
+	fmt.Fprintf(os.Stderr, "Error: %s %s\n", constants.FailureIndicator, result.Error)
+	os.Exit(1)
+	return nil // Never reached but required for compilation
 }
 
 // writeJSONOutput writes successful validation result to JSON file
@@ -321,10 +324,10 @@ func writeJSONOutput(filepath string, result *models.ValidationResult, template 
 
 	// Build final JSON structure
 	jsonOutput := &models.ValidationResultJSON{
-		Command: "validate",
-		Version: constants.Version,
-		Valid:   result.Valid,
-		Request: requestMeta,
+		Command:  "validate",
+		Version:  constants.Version,
+		Valid:    result.Valid,
+		Request:  requestMeta,
 		Response: responseMeta,
 	}
 

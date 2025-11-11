@@ -9,19 +9,18 @@ const (
 
 // Environment variable names
 const (
-	EnvSecretName       = "ARCHER_SECRET"
-	EnvVarPrefix        = "ARCHER_VAR_"
+	EnvSecretName = "ARCHER_SECRET"
+	EnvVarPrefix  = "ARCHER_VAR_"
+)
+
+// ANSI color codes
+const (
+	ColorRed   = "\033[91m"
+	ColorCyan  = "\033[96m"
+	ColorReset = "\033[0m"
 )
 
 // Security warnings
 const (
-	WarningSecretInCLI = "[WARNING] Passing secrets as command-line arguments is not secure.\n" +
-		"           Secrets will be exposed in:\n" +
-		"           - Shell history (~/.bash_history, ~/.zsh_history)\n" +
-		"           - Process lists (ps, top, htop)\n" +
-		"           - System logs and monitoring tools\n" +
-		"           \n" +
-		"           Recommended: Use environment variables instead:\n" +
-		"           - Single mode: export ARCHER_SECRET=\"your-secret\"\n" +
-		"           - Multipart mode: export ARCHER_VAR_API_KEY=\"value\"\n"
+	WarningSecretInCLI = ColorRed + "[WARNING] Secrets passed as CLI arguments are exposed in shell history, process lists, and logs.\n" + ColorReset
 )
