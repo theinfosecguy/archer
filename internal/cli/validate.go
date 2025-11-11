@@ -67,6 +67,9 @@ func init() {
 }
 
 func runValidate(cmd *cobra.Command, args []string) error {
+	// Silence usage on validation errors (not argument errors)
+	cmd.SilenceUsage = true
+
 	// Setup logging based on flags
 	if debug {
 		logger.SetDebug()
@@ -269,10 +272,7 @@ func handleValidationResult(result *models.ValidationResult, template *models.Se
 	}
 
 	// Always show errors even in json-only mode
-	// Print error directly instead of returning it to avoid Cobra showing usage
-	fmt.Fprintf(os.Stderr, "Error: %s %s\n", constants.FailureIndicator, result.Error)
-	os.Exit(1)
-	return nil // Never reached but required for compilation
+	return fmt.Errorf("%s %s", constants.FailureIndicator, result.Error)
 }
 
 // writeJSONOutput writes successful validation result to JSON file
