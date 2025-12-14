@@ -10,6 +10,12 @@ A fast, lightweight command-line tool for validating API secrets using YAML temp
 
 ## Installation
 
+**Go Install:**
+
+```bash
+go install github.com/theinfosecguy/archer/cmd/archer@latest
+```
+
 **Download Binary:**
 
 ```bash
@@ -24,7 +30,7 @@ chmod +x archer
 sudo mv archer /usr/local/bin/
 ```
 
-**Or build from source:**
+**Build from source:**
 
 ```bash
 git clone https://github.com/theinfosecguy/archer.git
